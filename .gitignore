@@ -1,0 +1,35 @@
+# Logs
+logs/
+*.log
+
+# .NET build output
+bin/
+obj/
+artifacts/
+TestResults/
+*.user
+*.rsuser
+*.suo
+
+# Local settings
+.env
+.env.*
+*.local
+
+# Editor directories and files
+.vs/
+.vscode/
+.idea/
+.DS_Store
+*.sw?
+
+# Agent working files
+docs/choices.md
+docs/breadcrumbs.md
+docs/superpowers/
+docs/specs/*
+plans/*
+
+# Release artifacts (upload via GitHub Releases; do not commit zips)
+release-assets/windows/*.zip
+release-assets/windows/SHA256SUMS.txt

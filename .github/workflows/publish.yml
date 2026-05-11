@@ -1,0 +1,52 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version, for example 1.0.0 or v1.0.0"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    name: Publish Windows zip
+    runs-on: windows-latest
+    env:
+      RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || inputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 11.0.x
+          dotnet-quality: preview
+
+      - name: Build release asset
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $tag = "${{ env.RELEASE_TAG }}"
+          if (-not $tag.StartsWith("v")) {
+            $tag = "v$tag"
+          }
+
+          if ($tag -notmatch '^v[0-9]+\.[0-9]+\.[0-9]+$') {
+            throw "Invalid release tag '$tag'. Expected vMAJOR.MINOR.PATCH."
+          }
+
+          $version = $tag.Substring(1)
+          $publishDir = "artifacts/publish/UsageMeter-win-x64"
+          $assetDir = "release-assets/windows"
+          $zipPath = "$assetDir/UsageMeter-$tag-win-x64.zip"
+
+          New-Item -ItemType Directory -Force -Path $assetDir | Out-Null
+          dotnet publish .\src\UsageMeter.App\UsageMeter.App.csproj -c Release -r win-x64 --self-contained true -p:Version=$version -o $publishDir
+          Compress-Archive -Path "$publishDir\*" -DestinationPath $zipPath -Force
+
+          .\scripts\Publish-GitHubRelease.ps1 -Version $tag -AssetsPath $assetDir -Title "UsageMeter $tag" -Clobber

@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Build and test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 11.0.x
+          dotnet-quality: preview
+
+      - name: Restore
+        run: dotnet restore .\UsageMeter.Windows.slnx
+
+      - name: Build
+        run: dotnet build .\UsageMeter.Windows.slnx --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test .\tests\UsageMeter.Tests\UsageMeter.Tests.csproj --configuration Release --no-build
